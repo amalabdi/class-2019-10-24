@@ -15,17 +15,38 @@ library(tidyverse)
 
 download.file("https://stacks.stanford.edu/file/druid:hp256wp2687/hp256wp2687_ct_hartford_2019_08_13.rds", destfile = "hartford.rds")
 
-data <- read_rds("hartford.rds")
-
-download.file("https://stacks.stanford.edu/file/druid:hp256wp2687/hp256wp2687_ct_hartford_shapefiles_2019_08_13.tgz", destfile = "shapes.tgz") 
+download.file("https://stacks.stanford.edu/file/druid:hp256wp2687/hp256wp2687_ct_hartford_shapefiles_2019_08_13.tgz", destfile = "shapes_hartford.tgz") 
 
 
 ```
 
 
 ```{r}
+data <- read_rds("hartford.rds")
 
-# data %>% 
-#  filter(officer_)
+officer_data <- data %>% 
+  filter(officer_id_hash == "09739d95d7") %>% 
+  
+#automatically does true/false
+  filter(arrest_made) %>% 
+  # have to go back and drop NA's in coordinates
+drop_na(lat, lng)
+# data is a regular tibble but needs to be an object that can work with map
+ locations <- st_as_sf(officer_data, coords = c("lat", "lng"), crs = 4326)
+```
+ st_as_sf(), crs, transition_time()
+ 
+```{r}
+# uncompress tgz file
+untar("shapes_hartford.tgz")
+
+#read in shp file
+shape <- st_read("ct_hartford_shapefiles/Hartford_Neighborhoods.shp")
 ```
 
+
+```{r make a plot}
+ggplot(shape) +
+  geom_sf(data = locations)
+```
+ 
